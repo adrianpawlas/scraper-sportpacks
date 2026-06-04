@@ -290,7 +290,7 @@ async def scrape_product(
         "second_hand": False,
         "other": info_text,  # Combined info text used for text embedding
         "size": size,
-        "country": "DE",
+        "country": None,
         "image_embedding": None,
         "info_embedding": None,
         "created_at": datetime.now(timezone.utc).isoformat(),

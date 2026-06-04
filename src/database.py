@@ -243,3 +243,29 @@ class SupabaseDB:
                     )
 
         return result
+
+    def reset_country_to_null(self, source: str | None = None) -> int:
+        """Set the country column to NULL for all products.
+
+        Args:
+            source: If provided, only update products for this source.
+                    If None, update all products across all sources.
+
+        Returns:
+            Number of rows updated.
+        """
+        try:
+            query = self.client.table(self.table_name).update({"country": None})
+            if source:
+                query = query.eq("source", source)
+            response = query.execute()
+            updated = len(response.data) if response.data else 0
+            logger.info(
+                "Reset country to NULL for %d products%s.",
+                updated,
+                f" (source: {source})" if source else "",
+            )
+            return updated
+        except Exception as e:
+            logger.error("Failed to reset country to NULL: %s", e)
+            return 0
