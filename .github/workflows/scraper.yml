@@ -1,0 +1,58 @@
+name: Sportpacks Scraper
+
+on:
+  # Scheduled runs: Tuesday and Saturday at 00:30 UTC
+  schedule:
+    - cron: '30 0 * * 2,6'
+
+  # Manual trigger via GitHub UI
+  workflow_dispatch:
+
+  # Also allow triggering via API
+  repository_dispatch:
+    types: [run-scraper]
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      COLLECTION_URL: ${{ secrets.COLLECTION_URL || 'https://sportpacks.de/en/collections/alle-artikel-1' }}
+      SOURCE_NAME: scraper-sportpacks
+      STORE_DOMAIN: https://sportpacks.de
+      BATCH_SIZE: 20
+      MAX_WORKERS: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-glx libglib2.0-0 2>/dev/null || true
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run scraper
+        run: python -m src.main --verbose
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scraper-logs
+          path: /tmp/scraper-*.log
+          retention-days: 7
