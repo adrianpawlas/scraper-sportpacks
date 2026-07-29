@@ -1,0 +1,13 @@
+name: Keepalive Workflow
+on:
+  schedule:
+    - cron: '0 0 * * *' # daily at midnight UTC
+permissions:
+  contents: read
+  actions: write
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: gautamkrishnar/keepalive-workflow@v2
